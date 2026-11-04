@@ -1,0 +1,22 @@
+# Installed after torch by docker/serve.Dockerfile into the serving SIF.
+
+transformers==5.2.0
+accelerate>=1.0.0
+safetensors>=0.4.0
+sentencepiece>=0.1.99
+protobuf>=3.20.0
+soundfile>=0.12.0
+numpy>=1.24.0,<2.0.0
+pillow>=10.0.0
+einops>=0.7.0
+tiktoken>=0.7.0
+huggingface_hub>=0.23.0
+requests>=2.31.0
+# av pins the vendored FFmpeg sonames docker/serve.Dockerfile links for torchcodec
+# (libavutil.so.60, ...); newer av releases ship other sonames and fail the build.
+av==18.1.0
+qwen-vl-utils>=0.0.8
+torchcodec==0.10.0
+fastapi>=0.115.0
+uvicorn>=0.32.0
+pydantic==2.10.6

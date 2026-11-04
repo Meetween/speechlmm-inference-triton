@@ -1,0 +1,12 @@
+# Sidecar for qwen3_tts, built with scripts/build/build_model_site.sh.
+# qwen-tts pins transformers 4.57.3, which conflicts with the SIF's 5.2.0.
+# qwen-tts goes in without its gradio demo dependency; the rest of its list follows.
+#nodeps qwen-tts==0.1.1
+transformers==4.57.3
+accelerate==1.12.0
+huggingface-hub>=0.34,<1.0
+tokenizers>=0.22,<0.23
+librosa
+sox
+onnxruntime
+einops

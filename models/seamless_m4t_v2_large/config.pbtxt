@@ -1,0 +1,31 @@
+name: "seamless_m4t_v2_large"
+backend: "python"
+# Speech-to-speech translation only (mode s2st): one AUDIO_BYTES clip in, a 16 kHz
+# WAV in GENERATED_AUDIO and the translated text in GENERATED_TEXT. The target
+# language is the envelope `language`; the prompt and generation scalars are ignored.
+max_batch_size: 1
+
+input [
+  { name: "AUDIO_BYTES"        data_type: TYPE_STRING dims: [ -1 ] optional: true },
+  { name: "VIDEO_BYTES"        data_type: TYPE_STRING dims: [ -1 ] optional: true },
+  { name: "TEXT_PROMPT"        data_type: TYPE_STRING dims: [ 1 ] },
+  { name: "MAX_NEW_TOKENS"     data_type: TYPE_INT32  dims: [ 1 ] optional: true },
+  { name: "DO_SAMPLE"          data_type: TYPE_BOOL   dims: [ 1 ] optional: true },
+  { name: "REPETITION_PENALTY" data_type: TYPE_FP32   dims: [ 1 ] optional: true },
+  { name: "TEMPERATURE"        data_type: TYPE_FP32   dims: [ 1 ] optional: true }
+]
+
+output [
+  { name: "GENERATED_TEXT" data_type: TYPE_STRING dims: [ 1 ] },
+  { name: "FINISH_REASON" data_type: TYPE_STRING dims: [ 1 ] },
+  { name: "GENERATED_AUDIO" data_type: TYPE_STRING dims: [ 1 ] },
+  { name: "METRICS" data_type: TYPE_STRING dims: [ 1 ] }
+]
+
+instance_group [
+  { count: 1 kind: KIND_GPU gpus: [0] }
+]
+
+parameters { key: "dtype" value: { string_value: "float32" } }
+parameters { key: "text_num_beams" value: { string_value: "5" } }
+parameters { key: "speech_do_sample" value: { string_value: "false" } }

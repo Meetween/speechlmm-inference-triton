@@ -1,0 +1,15 @@
+# Installed into the shared Python 3.10 venv (VENV_PATH → /venv).
+# Install PyTorch separately first (see setup_host_dependencies.sh) so the CUDA wheel matches your driver.
+
+transformers>=4.46.0
+accelerate>=0.33.0
+safetensors>=0.4.0
+sentencepiece>=0.1.99
+protobuf>=3.20.0
+soundfile>=0.12.0
+numpy>=1.24.0,<3.0.0
+pillow>=10.0.0
+einops>=0.7.0
+tiktoken>=0.7.0
+huggingface_hub>=0.23.0
+requests>=2.31.0

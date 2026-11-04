@@ -1,0 +1,40 @@
+name: "qwen3_omni"
+backend: "python"
+# Thinker is ~56 GiB in bf16; KIND_MODEL + device_map=auto shards across visible GPUs.
+# AUDIO_BYTES / VIDEO_BYTES: optional base64 blobs, N clips as shape [1, N]. Video
+# goes to the vision tower; lipread needs an encoder these weights lack and is refused.
+max_batch_size: 1
+
+input [
+  { name: "AUDIO_BYTES"        data_type: TYPE_STRING dims: [ -1 ] optional: true },
+  { name: "VIDEO_BYTES"        data_type: TYPE_STRING dims: [ -1 ] optional: true },
+  { name: "TEXT_PROMPT"        data_type: TYPE_STRING dims: [ 1 ] },
+  { name: "MAX_NEW_TOKENS"     data_type: TYPE_INT32  dims: [ 1 ] optional: true },
+  { name: "DO_SAMPLE"          data_type: TYPE_BOOL   dims: [ 1 ] optional: true },
+  { name: "REPETITION_PENALTY" data_type: TYPE_FP32   dims: [ 1 ] optional: true },
+  { name: "TEMPERATURE"        data_type: TYPE_FP32   dims: [ 1 ] optional: true }
+]
+
+output [
+  { name: "GENERATED_TEXT" data_type: TYPE_STRING dims: [ 1 ] },
+  { name: "FINISH_REASON" data_type: TYPE_STRING dims: [ 1 ] },
+  { name: "GENERATED_AUDIO" data_type: TYPE_STRING dims: [ 1 ] },
+  { name: "METRICS" data_type: TYPE_STRING dims: [ 1 ] }
+]
+
+instance_group [
+  { count: 1 kind: KIND_MODEL }
+]
+
+parameters {
+  key: "device_map"
+  value: { string_value: "auto" }
+}
+parameters {
+  key: "dtype"
+  value: { string_value: "bfloat16" }
+}
+parameters {
+  key: "codec_frame_rate"
+  value: { string_value: "12.5" }
+}

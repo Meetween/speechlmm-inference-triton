@@ -1,0 +1,30 @@
+name: "qwen3_tts"
+backend: "python"
+# Text-to-speech only (mode tts): the prompt is the text to speak, the envelope
+# `language` its language. A 24 kHz WAV comes back in GENERATED_AUDIO and the
+# spoken text in GENERATED_TEXT. Needs QWEN3_TTS_SITE_PACKAGES (qwen-tts sidecar).
+max_batch_size: 1
+
+input [
+  { name: "AUDIO_BYTES"        data_type: TYPE_STRING dims: [ -1 ] optional: true },
+  { name: "VIDEO_BYTES"        data_type: TYPE_STRING dims: [ -1 ] optional: true },
+  { name: "TEXT_PROMPT"        data_type: TYPE_STRING dims: [ 1 ] },
+  { name: "MAX_NEW_TOKENS"     data_type: TYPE_INT32  dims: [ 1 ] optional: true },
+  { name: "DO_SAMPLE"          data_type: TYPE_BOOL   dims: [ 1 ] optional: true },
+  { name: "REPETITION_PENALTY" data_type: TYPE_FP32   dims: [ 1 ] optional: true },
+  { name: "TEMPERATURE"        data_type: TYPE_FP32   dims: [ 1 ] optional: true }
+]
+
+output [
+  { name: "GENERATED_TEXT" data_type: TYPE_STRING dims: [ 1 ] },
+  { name: "FINISH_REASON" data_type: TYPE_STRING dims: [ 1 ] },
+  { name: "GENERATED_AUDIO" data_type: TYPE_STRING dims: [ 1 ] },
+  { name: "METRICS" data_type: TYPE_STRING dims: [ 1 ] }
+]
+
+instance_group [
+  { count: 1 kind: KIND_GPU gpus: [0] }
+]
+
+parameters { key: "dtype" value: { string_value: "bfloat16" } }
+parameters { key: "codec_frame_rate" value: { string_value: "12.5" } }

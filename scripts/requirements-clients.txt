@@ -1,0 +1,5 @@
+# Client-side only: needed to run examples/client/ and clients/verify_speechlmm_v2.py,
+# which drive the gateway through the official SDK. Deliberately kept out of
+# requirements-speechlmm-v2.txt so the serving prefix stays minimal.
+
+openai>=1.60.0

@@ -1,0 +1,91 @@
+version: "3.8"
+
+services:
+  tritonserver:
+    image: ${TRITON_IMAGE:-nvcr.io/nvidia/tritonserver:24.01-py3}
+    container_name: triton-unified
+    restart: unless-stopped
+
+    # Expose Triton HTTP/gRPC/metrics.
+    ports:
+      - "${TRITON_HTTP_PORT:-9000}:8000"
+      - "${TRITON_GRPC_PORT:-9001}:8001"
+      - "${TRITON_METRICS_PORT:-9002}:8002"
+
+    # docker-compose (v1) compatible GPU wiring.
+    runtime: nvidia
+
+    shm_size: "2gb"
+
+    volumes:
+      # Triton model repository (contains all models).
+      - ./models:/models
+
+      # Shared Python deps (PyTorch, base transformers, etc.)
+      - ${VENV_PATH:-/opt/triton-unified/venv}:/venv:ro
+
+      # Hugging Face cache (kept inside Triton-Unified for portability).
+      - ./huggingface_cache:/root/.cache/huggingface
+
+      # Optional: Voxtral dependency bundle (transformers>=4.54 + mistral-common[audio], etc.)
+      - ${VOXTRAL_DEPS:-/opt/triton-unified/voxtral_deps}:/deps:ro
+
+      # Unified per-model dependency overlays (kept in this repo).
+      - ./deps:/unified_deps:ro
+
+      # Temp + logs
+      - ./tmp:/tmp/triton
+      - ./logs:/logs
+
+    environment:
+      # GPU selection (default: all). Examples: "0" or "0,1" or "all".
+      - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
+      - NVIDIA_DRIVER_CAPABILITIES=${NVIDIA_DRIVER_CAPABILITIES:-compute,utility}
+
+      # Keep temp local to mounted volume (avoid filling container FS).
+      - TMPDIR=/tmp/triton
+
+      # Shared deps
+      - VENV_SITE_PACKAGES=/venv/lib/python3.10/site-packages
+      - VOXTRAL_SITE_PACKAGES=/deps/voxtral_site
+      - VOXTRAL_OVERLAY_SITE_PACKAGES=/unified_deps/voxtral_overlay
+
+      # HF cache + auth
+      - HF_HOME=/root/.cache/huggingface
+      - TRANSFORMERS_CACHE=/root/.cache/huggingface
+      - HF_TOKEN=${HF_TOKEN:-}
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN:-}
+      - HF_HUB_DISABLE_TELEMETRY=1
+
+      # Common perf knobs
+      - OMP_NUM_THREADS=1
+      - MKL_NUM_THREADS=1
+      - PYTORCH_CUDA_ALLOC_CONF=${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}
+
+      # Optional VAD knobs (used by Voxtral + Qwen backends if enabled)
+      - VAD_ENABLED=${VAD_ENABLED:-false}
+      - VAD_THRESHOLD=${VAD_THRESHOLD:-0.5}
+      - VAD_ENERGY_FALLBACK=${VAD_ENERGY_FALLBACK:-0.02}
+
+      # Model IDs (override per deployment without editing model.py)
+      # This stack serves Voxtral and Qwen2.5-Omni only; the speechlmm_v2_* models
+      # need the Singularity path (scripts/serve_singularity.sh), which brings the
+      # Python 3.12 venv and the FFmpeg sonames their backend requires.
+      - VOXTRAL_MODEL=${VOXTRAL_MODEL:-mistralai/Voxtral-Mini-3B-2507}
+      - QWEN25_OMNI_MODEL=${QWEN25_OMNI_MODEL:-Qwen/Qwen2.5-Omni-7B}
+
+      # Default generation knobs
+      - MAX_NEW_TOKENS=${MAX_NEW_TOKENS:-512}
+      - TEMPERATURE=${TEMPERATURE:-0.0}
+      - DO_SAMPLE=${DO_SAMPLE:-0}
+
+    command: >
+      tritonserver
+      --model-repository=/models
+      --model-control-mode=explicit
+      --strict-readiness=false
+      --exit-on-error=false
+      --log-info=true
+      --log-warning=true
+      --log-error=true
+

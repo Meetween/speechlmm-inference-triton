@@ -1,0 +1,5 @@
+# Installed with: pip install --target "$VOXTRAL_DEPS/voxtral_site" -r requirements-voxtral-site.txt
+# That directory is mounted at /deps/voxtral_site and prepended to sys.path before the venv (see voxtral model.py).
+
+mistral-common[audio]>=1.4.4
+transformers>=4.54.0

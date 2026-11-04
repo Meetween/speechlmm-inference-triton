@@ -1,0 +1,7 @@
+# Sidecar for omnivoice, built with scripts/build/build_model_site.sh.
+# omnivoice needs transformers>=5.3.0 (HiggsAudioV2 tokenizer); the SIF has 5.2.0.
+# omnivoice goes in without its gradio/training dependencies; inference needs the rest.
+#nodeps omnivoice==0.2.1
+transformers==5.3.0
+librosa
+pydub
